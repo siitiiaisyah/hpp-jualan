@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator HPP Jualan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-elements">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Kalkulator HPP Jualan</h1>
+            <p>Hitung Harga Pokok Penjualan dan Keuntungan Bisnismu dengan Mudah!</p>
+        </header>
+
+        <!-- INPUT NAMA PRODUK -->
+        <div class="product-title-card">
+            <div class="input-group">
+                <label for="nama-resep">Nama Produk / Resep <span class="tooltip"
+                        title="Tuliskan nama produk yang sedang dihitung, contoh: Risol Mayo, Brownies Lumer">?</span></label>
+                <input type="text" id="nama-resep" placeholder="Contoh: Risol Mayo (1 Resep)" class="title-input">
+            </div>
+        </div>
+
+        <!-- SAVED DATA SECTION -->
+        <div class="card" id="saved-hpp-card" style="display: none;">
+            <div class="section-header" style="border-bottom:none; padding-bottom:0;">
+                <h2 style="font-size: 1.25rem;">📁 Data HPP Tersimpan</h2>
+                <p>Klik Buka untuk memuat kembali data yang sudah tersimpan di browser perangkat ini.</p>
+            </div>
+            <div class="table-responsive" style="margin-bottom: 0; margin-top: 1rem;">
+                <div id="saved-list" class="saved-grid">
+                    <!-- Buttons will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- BAHAN BAKU SECTION -->
+        <section class="card" id="bahan-baku-section">
+            <div class="section-header">
+                <h2>1. Biaya Bahan Baku</h2>
+                <p>Masukkan semua bahan yang digunakan untuk satu resep/produksi.</p>
+            </div>
+            <div class="table-responsive">
+                <table id="bahan-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Bahan <span class="tooltip" title="Contoh: Tepung Terigu, Gula, dll">?</span></th>
+                            <th>Harga Beli (Rp) <span class="tooltip"
+                                    title="Harga modal saat beli utuh. Contoh: 15000">?</span></th>
+                            <th>Satuan <span class="tooltip" title="Satuan dari kemasan yang dibeli">?</span></th>
+                            <th>Isi Kemasan <span class="tooltip"
+                                    title="Isi total dalam satu kemasan (gram/ml/pcs). Contoh: jika beli 1kg tulis 1000, satuannya gram">?</span>
+                            </th>
+                            <th>Jml Terpakai <span class="tooltip"
+                                    title="Jumlah yang dipakai untuk 1 resep. Contoh: 250">?</span></th>
+                            <th>Biaya (Rp)</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" onclick="addBahanRow()">+ Tambah Bahan</button>
+            <div class="total-box">
+                <span>Total Biaya Bahan:</span>
+                <span id="total-bahan-text">Rp 0</span>
+            </div>
+        </section>
+
+        <!-- OPERASIONAL SECTION -->
+        <section class="card" id="operasional-section">
+            <div class="section-header">
+                <h2>2. Biaya Operasional</h2>
+                <p>Biaya yang mendukung produksi (Listrik, Gas, Packaging, Tenaga, dll).</p>
+            </div>
+            <div class="table-responsive">
+                <table id="op-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Jenis Biaya <span class="tooltip"
+                                    title="Contoh: Gas Elpiji, Listrik, Mika Plastik">?</span></th>
+                            <th>Harga (Rp) <span class="tooltip"
+                                    title="Harga beli/bayar. Misal: kemasan pcs Rp 500">?</span></th>
+                            <th>Kapasitas/Isi <span class="tooltip"
+                                    title="Isi dari kemasan. Misal beli 1 pack isi 50pcs -> Tulis 50">?</span></th>
+                            <th>Total Pakai <span class="tooltip"
+                                    title="Berapa yang dipakai untuk 1 kali resep pembuatan. Biasanya diisi 1 untuk kemasan per pcs/resep">?</span>
+                            </th>
+                            <th>Biaya (Rp)</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-primary" onclick="addOpRow()">+ Tambah Operasional</button>
+            <div class="total-box">
+                <span>Total Biaya Operasional:</span>
+                <span id="total-op-text">Rp 0</span>
+            </div>
+        </section>
+
+        <!-- HASIL HPP SECTION -->
+        <section class="card" id="hasil-section">
+            <div class="section-header">
+                <h2>3. Hasil & Penentuan Harga (HPP)</h2>
+                <p>Kalkulasi akhir untuk mengetahui harga modal, saran harga jual, dan keuntungan.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="input-group readonly">
+                    <label>Total Biaya Bahan</label>
+                    <input type="text" id="final-bahan" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly">
+                    <label>Total Biaya Operasional</label>
+                    <input type="text" id="final-op" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly highlight-group">
+                    <label>Total Biaya Produksi (HPP Resep)</label>
+                    <input type="text" id="final-produksi" readonly value="Rp 0" class="bold-text">
+                </div>
+
+                <div class="input-group user-input">
+                    <label>Jumlah Produk Jadi (pcs/porsi) <span class="tooltip"
+                            title="Berapa pcs/porsi yang dihasilkan dari 1 resep ini?">?</span></label>
+                    <input type="number" id="jumlah-produk" value="1" min="1" oninput="calculateAll()">
+                </div>
+
+                <div class="input-group readonly emphasize">
+                    <label>HPP per Produk (Modal Utama)</label>
+                    <input type="text" id="hpp-per-produk" readonly value="Rp 0">
+                    <small class="helper">Ini adalah modal per 1 pcs. Jangan jual di bawah harga ini!</small>
+                </div>
+
+                <div class="input-group user-input">
+                    <label>Persentase Keuntungan (%) <span class="tooltip"
+                            title="Persentase laba yang diinginkan. Contoh: ketik 50 untuk laba 50%">?</span></label>
+                    <input type="number" id="persen-laba" value="50" min="0" oninput="calculateAll()">
+                </div>
+
+                <div class="input-group readonly emphasize success">
+                    <label>Saran Harga Jual (per pcs)</label>
+                    <input type="text" id="saran-harga" readonly value="Rp 0">
+                </div>
+
+                <div class="input-group readonly info">
+                    <label>Keuntungan per Pcs</label>
+                    <input type="text" id="laba-per-pcs" readonly value="Rp 0">
+                </div>
+
+                <div class="input-group readonly info">
+                    <label>Keuntungan per Resep (Total Laba)</label>
+                    <input type="text" id="laba-per-resep" readonly value="Rp 0">
+                </div>
+            </div>
+
+            <div class="divider"></div>
+            <h3>Simulasi Harga Khusus</h3>
+            <p class="helper-text">Jika kamu tidak ingin mengikuti saran harga di atas, masukkan harga jual yang kamu
+                mau di bawah ini untuk melihat keuntungan riilnya.</p>
+            <div class="grid-2">
+                <div class="input-group user-input">
+                    <label>Harga Jual Saya (per pcs) <span class="tooltip"
+                            title="Harga yang fix kamu tetapkan ke pembeli">?</span></label>
+                    <input type="number" id="harga-jual-manual" placeholder="Contoh: 15000" oninput="calculateAll()">
+                </div>
+                <div class="input-group readonly info">
+                    <label>Keuntungan Riil per Pcs</label>
+                    <input type="text" id="laba-riil-pcs" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly info">
+                    <label>Keuntungan Riil per Resep</label>
+                    <input type="text" id="laba-riil-total" readonly value="Rp 0">
+                </div>
+            </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="action-buttons">
+        <button class="btn btn-secondary btn-large btn-save" onclick="saveCurrentData()">
+            💾 Simpan Datanya
+        </button>
+        <button class="btn btn-primary btn-large btn-print" onclick="window.print()">
+            🖨️ Simpan sebagai PDF / Cetak
+        </button>
+    </div>
+
+    </section>
+
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
