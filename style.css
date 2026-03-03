@@ -326,6 +326,28 @@ select:focus {
     .grid-2 {
         grid-template-columns: 1fr;
     }
+
+    .total-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 1.15rem;
+    }
+}
+
+/* Mencegah harga dan input lainnya terpotong di layar HP */
+td input,
+td select {
+    min-width: 110px;
+}
+
+td:nth-child(2) input {
+    min-width: 180px;
+}
+
+td:nth-last-child(2) input {
+    min-width: 150px;
+    font-weight: 700;
 }
 
 .input-group {
