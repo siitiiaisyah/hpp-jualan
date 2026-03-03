@@ -326,6 +326,7 @@ select:focus {
     .grid-2 {
         grid-template-columns: 1fr;
     }
+<<<<<<< HEAD
 
     .total-box {
         flex-direction: column;
@@ -348,6 +349,8 @@ td:nth-child(2) input {
 td:nth-last-child(2) input {
     min-width: 150px;
     font-weight: 700;
+=======
+>>>>>>> 78b42e31378d912472f9dd2d4b4bc76468ef3cd9
 }
 
 .input-group {
