@@ -84,7 +84,7 @@
         <section class="card" id="operasional-section">
             <div class="section-header">
                 <h2>2. Biaya Operasional</h2>
-                <p>Biaya yang mendukung produksi seperti kemasan dan tenaga kerja. Perhatikan bahwa <strong>gas</strong> dan <strong>listrik</strong> dihitung terpisah agar lebih jelas.</p>
+                <p>Biaya yang mendukung produksi seperti kemasan. Biaya <strong>tenaga kerja</strong> kini dihitung terpisah supaya bisa ditetapkan berdasarkan gaji dan jam kerja. Perhatikan juga bahwa <strong>gas</strong> dan <strong>listrik</strong> dihitung terpisah agar lebih jelas.</p>
             </div>
 
             <!-- GAS CALCULATOR -->
@@ -160,6 +160,34 @@
                 </div>
             </div>
 
+            <!-- TENAGA KERJA CALCULATOR -->
+            <div class="subsection" id="labor-calculator">
+                <h3>Perhitungan Tenaga Kerja</h3>
+                <p>Daftar tenaga kerja: nama, gaji/jam dan jam kerja. Tambah atau hapus baris jika ada lebih dari satu pekerja.</p>
+                <div class="table-responsive">
+                    <table id="labor-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Pekerja</th>
+                                <th>Gaji per Jam (Rp)</th>
+                                <th>Jam</th>
+                                <th>Biaya (Rp)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary" onclick="addLaborRow()">+ Tambah Tenaga Kerja</button>
+                <div class="total-box">
+                    <span>Biaya Tenaga Kerja:</span>
+                    <span id="labor-cost-text">Rp 0</span>
+                </div>
+            </div>
+
             <!-- GENERIC OP TABLE -->
             <div class="table-responsive">
                 <table id="op-table">
@@ -214,6 +242,10 @@
                 <div class="input-group readonly">
                     <label>Total Biaya Listrik</label>
                     <input type="text" id="final-listrik" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly">
+                    <label>Total Biaya Tenaga Kerja</label>
+                    <input type="text" id="final-labor" readonly value="Rp 0">
                 </div>
                 <div class="input-group readonly highlight-group">
                     <label>Total Biaya Produksi (HPP Resep)</label>

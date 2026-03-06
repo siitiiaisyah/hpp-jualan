@@ -8,15 +8,19 @@ let bahanCounter = 0;
 let opCounter = 0;
 let gasCost = 0;
 let listrikCost = 0;
+let laborCost = 0; // total biaya tenaga kerja dari semua baris
 let listrikCounter = 0;
+let laborCounter = 0;
 
 // Render initial empty rows
 document.addEventListener('DOMContentLoaded', () => {
     addBahanRow();
     addOpRow();
     addListrikRow();
+    addLaborRow();
     calculateGas();
     calculateListrikAll();
+    calculateLaborAll();
     calculateAll();
 
     // Update document title for Printing/Saving PDF
@@ -106,6 +110,51 @@ const calculateGas = () => {
     }
     gasCost = jam * 0.2 * hargaPerKg;
     document.getElementById('gas-cost-text').textContent = formatRupiah(gasCost);
+    calculateAll();
+};
+
+// --- LABOR CALCULATION ---
+const calculateLaborRow = (id) => {
+    const wage = parseFloat(document.getElementById(`labor-wage-${id}`).value) || 0;
+    const hours = parseFloat(document.getElementById(`labor-hours-${id}`).value) || 0;
+    const biaya = wage * hours;
+    document.getElementById(`labor-biaya-${id}`).value = formatRupiah(biaya);
+    document.getElementById(`labor-biaya-${id}`).setAttribute('data-value', biaya);
+    calculateLaborAll();
+};
+
+const addLaborRow = () => {
+    laborCounter++;
+    const tbody = document.querySelector('#labor-table tbody');
+    const tr = document.createElement('tr');
+    tr.id = `labor-row-${laborCounter}`;
+
+    tr.innerHTML = `
+        <td class="row-num"></td>
+        <td><input type="text" id="labor-nama-${laborCounter}" placeholder="Cth: Budi" oninput="calculateLaborRow(${laborCounter})"></td>
+        <td><input type="number" id="labor-wage-${laborCounter}" placeholder="Cth: 20000" min="0" oninput="calculateLaborRow(${laborCounter})"></td>
+        <td><input type="number" id="labor-hours-${laborCounter}" placeholder="Cth: 2" min="0" oninput="calculateLaborRow(${laborCounter})"></td>
+        <td><input type="text" id="labor-biaya-${laborCounter}" value="Rp 0" data-value="0" readonly class="input-readonly"></td>
+        <td><button class="btn-danger" onclick="removeLaborRow('labor-row-${laborCounter}')">X</button></td>
+    `;
+
+    tbody.appendChild(tr);
+    updateRowNumbers('labor-table');
+};
+
+const removeLaborRow = (rowId) => {
+    document.getElementById(rowId).remove();
+    updateRowNumbers('labor-table');
+    calculateLaborAll();
+};
+
+const calculateLaborAll = () => {
+    let total = 0;
+    document.querySelectorAll('[id^="labor-biaya-"]').forEach(input => {
+        total += parseFloat(input.getAttribute('data-value')) || 0;
+    });
+    laborCost = total;
+    document.getElementById('labor-cost-text').textContent = formatRupiah(laborCost);
     calculateAll();
 };
 
@@ -202,13 +251,13 @@ const calculateAll = () => {
     document.getElementById('total-bahan-text').textContent = formatRupiah(totalBahan);
     document.getElementById('final-bahan').value = formatRupiah(totalBahan);
 
-    // 2. Calculate Total Operasional (generic + gas + listrik)
+    // 2. Calculate Total Operasional (generic + gas + listrik + labor)
     let totalOp = 0;
     document.querySelectorAll('[id^="op-biaya-"]').forEach(input => {
         totalOp += parseFloat(input.getAttribute('data-value')) || 0;
     });
-    // include gas and listrik costs
-    totalOp += gasCost + listrikCost;
+    // include gas, listrik, and labor costs
+    totalOp += gasCost + listrikCost + laborCost;
     document.getElementById('total-op-text').textContent = formatRupiah(totalOp);
     document.getElementById('final-op').value = formatRupiah(totalOp);
 
@@ -217,6 +266,8 @@ const calculateAll = () => {
     if (fg) fg.value = formatRupiah(gasCost);
     const fl = document.getElementById('final-listrik');
     if (fl) fl.value = formatRupiah(listrikCost);
+    const flabor = document.getElementById('final-labor');
+    if (flabor) flabor.value = formatRupiah(laborCost);
 
     // 3. Calculate Total Produksi (HPP Resep)
     const totalProduksi = totalBahan + totalOp;
@@ -307,7 +358,7 @@ const saveCurrentData = () => {
         }
     });
 
-    // capture gas and listrik inputs
+    // capture gas, listrik, and labor inputs
     const gasJam = document.getElementById('gas-jam').value;
     const gasHarga = document.getElementById('gas-harga').value;
     const gasIsi = document.getElementById('gas-isi').value;
@@ -326,6 +377,19 @@ const saveCurrentData = () => {
         }
     });
 
+    const laborList = [];
+    document.querySelectorAll('#labor-table tbody tr').forEach(tr => {
+        const idStr = tr.id;
+        if (!idStr) return;
+        const index = idStr.split('-')[2];
+        const nama = tr.querySelector(`td:nth-child(2) input`) ? tr.querySelector(`td:nth-child(2) input`).value : '';
+        const wage = document.getElementById(`labor-wage-${index}`) ? document.getElementById(`labor-wage-${index}`).value : '';
+        const hours = document.getElementById(`labor-hours-${index}`) ? document.getElementById(`labor-hours-${index}`).value : '';
+        if (nama || wage || hours) {
+            laborList.push({ nama, wage, hours });
+        }
+    });
+
     const hppData = {
         id: Date.now().toString(),
         namaResep,
@@ -339,7 +403,8 @@ const saveCurrentData = () => {
         gasHarga,
         gasIsi,
         listrikTarif,
-        listrikList
+        listrikList,
+        laborList
     };
 
     let saved = getSavedData();
@@ -418,6 +483,22 @@ const loadData = (id) => {
         document.getElementById('gas-isi').value = data.gasIsi;
     }
     calculateGas();
+
+    // restore labor info
+    // clear existing labor rows first
+    document.querySelector('#labor-table tbody').innerHTML = '';
+    if (data.laborList && data.laborList.length > 0) {
+        data.laborList.forEach(item => {
+            addLaborRow();
+            const lastIndex = laborCounter;
+            document.querySelector(`#labor-row-${lastIndex} td:nth-child(2) input`).value = item.nama || '';
+            document.getElementById(`labor-wage-${lastIndex}`).value = item.wage;
+            document.getElementById(`labor-hours-${lastIndex}`).value = item.hours;
+        });
+    } else {
+        addLaborRow();
+    }
+    calculateLaborAll();
 
     // restore listrik info
     if (data.listrikTarif !== undefined) {
