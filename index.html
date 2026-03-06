@@ -84,8 +84,83 @@
         <section class="card" id="operasional-section">
             <div class="section-header">
                 <h2>2. Biaya Operasional</h2>
-                <p>Biaya yang mendukung produksi (Listrik, Gas, Packaging, Tenaga, dll).</p>
+                <p>Biaya yang mendukung produksi seperti kemasan dan tenaga kerja. Perhatikan bahwa <strong>gas</strong> dan <strong>listrik</strong> dihitung terpisah agar lebih jelas.</p>
             </div>
+
+            <!-- GAS CALCULATOR -->
+            <div class="subsection" id="gas-calculator">
+                <h3>Perhitungan Gas</h3>
+                <p>Estimasi pemakaian gas untuk kompor: <strong>0.2&nbsp;kg per jam</strong>. Masukkan lama pemakaian, harga tabung, dan isi tabung (kg).</p>
+                <div class="grid-3">
+                    <div class="input-group user-input">
+                        <label>Lama Pemakaian (jam)</label>
+                        <input type="number" id="gas-jam" value="0" min="0" oninput="calculateGas()">
+                    </div>
+                    <div class="input-group user-input">
+                        <label>Harga Tabung Gas (Rp)</label>
+                        <input type="number" id="gas-harga" value="0" min="0" oninput="calculateGas()">
+                    </div>
+                    <div class="input-group user-input">
+                        <label>Isi Tabung (kg)</label>
+                        <input type="number" id="gas-isi" value="0" min="0" oninput="calculateGas()">
+                    </div>
+                </div>
+                <div class="total-box">
+                    <span>Biaya Gas Estimasi:</span>
+                    <span id="gas-cost-text">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- LISTRIK CALCULATOR -->
+            <div class="subsection" id="listrik-calculator">
+                <h3>Perhitungan Listrik</h3>
+                <p>Rumus: <em>d</em> (watt) × <em>t</em> (jam) ÷ 1000 = kWh. Jumlahkan kWh semua perangkat, lalu kalikan dengan tarif listrik (Rp/kWh).</p>
+                <p class="helper-text">Tarif Listrik Rumah Tangga:</p>
+                <div class="table-responsive">
+                    <table class="tarif-table">
+                        <thead>
+                            <tr><th>Golongan</th><th>Daya</th><th>Tarif (Rp/kWh)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>R-1 (Subsidi)</td><td>450 VA</td><td>Rp415</td></tr>
+                            <tr><td>R-1 (Subsidi)</td><td>900 VA</td><td>Rp605</td></tr>
+                            <tr><td>R-1 (Non-Subsidi)</td><td>900 VA</td><td>Rp1.352</td></tr>
+                            <tr><td>R-1 (Non-Subsidi)</td><td>1.300–2.200 VA</td><td>Rp1.444,70</td></tr>
+                            <tr><td>R-2</td><td>3.500–5.500 VA</td><td>Rp1.699,53</td></tr>
+                            <tr><td>R-3</td><td>≥ 6.600 VA</td><td>Rp1.699,53</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="input-group user-input">
+                    <label>Tarif yang Digunakan (Rp/kWh)</label>
+                    <input type="number" id="listrik-tarif" value="0" min="0" oninput="calculateListrikAll()">
+                </div>
+                <div class="table-responsive">
+                    <table id="listrik-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Perangkat</th>
+                                <th>Daya (W)</th>
+                                <th>Jam</th>
+                                <th>kWh</th>
+                                <th>Biaya (Rp)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-primary" onclick="addListrikRow()">+ Tambah Perangkat</button>
+                <div class="total-box">
+                    <span>Total Biaya Listrik:</span>
+                    <span id="total-listrik-text">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- GENERIC OP TABLE -->
             <div class="table-responsive">
                 <table id="op-table">
                     <thead>
@@ -131,6 +206,14 @@
                 <div class="input-group readonly">
                     <label>Total Biaya Operasional</label>
                     <input type="text" id="final-op" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly">
+                    <label>Total Biaya Gas</label>
+                    <input type="text" id="final-gas" readonly value="Rp 0">
+                </div>
+                <div class="input-group readonly">
+                    <label>Total Biaya Listrik</label>
+                    <input type="text" id="final-listrik" readonly value="Rp 0">
                 </div>
                 <div class="input-group readonly highlight-group">
                     <label>Total Biaya Produksi (HPP Resep)</label>

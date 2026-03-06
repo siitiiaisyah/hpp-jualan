@@ -6,11 +6,17 @@ const formatRupiah = (number) => {
 // State variables
 let bahanCounter = 0;
 let opCounter = 0;
+let gasCost = 0;
+let listrikCost = 0;
+let listrikCounter = 0;
 
 // Render initial empty rows
 document.addEventListener('DOMContentLoaded', () => {
     addBahanRow();
     addOpRow();
+    addListrikRow();
+    calculateGas();
+    calculateListrikAll();
     calculateAll();
 
     // Update document title for Printing/Saving PDF
@@ -89,6 +95,71 @@ const calculateOpRow = (id) => {
     calculateAll();
 }
 
+// --- GAS CALCULATION ---
+const calculateGas = () => {
+    const jam = parseFloat(document.getElementById('gas-jam').value) || 0;
+    const harga = parseFloat(document.getElementById('gas-harga').value) || 0;
+    const isi = parseFloat(document.getElementById('gas-isi').value) || 0;
+    let hargaPerKg = 0;
+    if (isi > 0) {
+        hargaPerKg = harga / isi;
+    }
+    gasCost = jam * 0.2 * hargaPerKg;
+    document.getElementById('gas-cost-text').textContent = formatRupiah(gasCost);
+    calculateAll();
+};
+
+// --- LISTRIK CALCULATION ---
+const calculateListrikRow = (id) => {
+    const daya = parseFloat(document.getElementById(`listrik-daya-${id}`).value) || 0;
+    const jam = parseFloat(document.getElementById(`listrik-jam-${id}`).value) || 0;
+    const tarif = parseFloat(document.getElementById('listrik-tarif').value) || 0;
+    const kwh = (daya * jam) / 1000;
+    const biaya = kwh * tarif;
+
+    document.getElementById(`listrik-kwh-${id}`).value = kwh.toFixed(3);
+    document.getElementById(`listrik-biaya-${id}`).value = formatRupiah(biaya);
+    document.getElementById(`listrik-biaya-${id}`).setAttribute('data-value', biaya);
+
+    calculateListrikAll();
+};
+
+const addListrikRow = () => {
+    listrikCounter++;
+    const tbody = document.querySelector('#listrik-table tbody');
+    const tr = document.createElement('tr');
+    tr.id = `listrik-row-${listrikCounter}`;
+
+    tr.innerHTML = `
+        <td class="row-num"></td>
+        <td><input type="text" id="listrik-nama-${listrikCounter}" placeholder="Cth: Mixer" oninput="calculateListrikRow(${listrikCounter})"></td>
+        <td><input type="number" id="listrik-daya-${listrikCounter}" placeholder="Cth: 350" min="0" oninput="calculateListrikRow(${listrikCounter})"></td>
+        <td><input type="number" id="listrik-jam-${listrikCounter}" placeholder="Cth: 2" min="0" oninput="calculateListrikRow(${listrikCounter})"></td>
+        <td><input type="text" id="listrik-kwh-${listrikCounter}" value="0" readonly class="input-readonly"></td>
+        <td><input type="text" id="listrik-biaya-${listrikCounter}" value="Rp 0" data-value="0" readonly class="input-readonly"></td>
+        <td><button class="btn-danger" onclick="removeListrikRow('listrik-row-${listrikCounter}')">X</button></td>
+    `;
+
+    tbody.appendChild(tr);
+    updateRowNumbers('listrik-table');
+};
+
+const removeListrikRow = (rowId) => {
+    document.getElementById(rowId).remove();
+    updateRowNumbers('listrik-table');
+    calculateListrikAll();
+};
+
+const calculateListrikAll = () => {
+    let total = 0;
+    document.querySelectorAll('[id^="listrik-biaya-"]').forEach(input => {
+        total += parseFloat(input.getAttribute('data-value')) || 0;
+    });
+    listrikCost = total;
+    document.getElementById('total-listrik-text').textContent = formatRupiah(listrikCost);
+    calculateAll();
+};
+
 const addOpRow = () => {
     opCounter++;
     const tbody = document.querySelector('#op-table tbody');
@@ -131,13 +202,21 @@ const calculateAll = () => {
     document.getElementById('total-bahan-text').textContent = formatRupiah(totalBahan);
     document.getElementById('final-bahan').value = formatRupiah(totalBahan);
 
-    // 2. Calculate Total Operasional
+    // 2. Calculate Total Operasional (generic + gas + listrik)
     let totalOp = 0;
     document.querySelectorAll('[id^="op-biaya-"]').forEach(input => {
         totalOp += parseFloat(input.getAttribute('data-value')) || 0;
     });
+    // include gas and listrik costs
+    totalOp += gasCost + listrikCost;
     document.getElementById('total-op-text').textContent = formatRupiah(totalOp);
     document.getElementById('final-op').value = formatRupiah(totalOp);
+
+    // show separate breakdown if fields exist
+    const fg = document.getElementById('final-gas');
+    if (fg) fg.value = formatRupiah(gasCost);
+    const fl = document.getElementById('final-listrik');
+    if (fl) fl.value = formatRupiah(listrikCost);
 
     // 3. Calculate Total Produksi (HPP Resep)
     const totalProduksi = totalBahan + totalOp;
@@ -228,6 +307,25 @@ const saveCurrentData = () => {
         }
     });
 
+    // capture gas and listrik inputs
+    const gasJam = document.getElementById('gas-jam').value;
+    const gasHarga = document.getElementById('gas-harga').value;
+    const gasIsi = document.getElementById('gas-isi').value;
+
+    const listrikTarif = document.getElementById('listrik-tarif').value;
+    const listrikList = [];
+    document.querySelectorAll('#listrik-table tbody tr').forEach(tr => {
+        const idStr = tr.id;
+        if (!idStr) return;
+        const index = idStr.split('-')[2];
+        const nama = tr.querySelector(`td:nth-child(2) input`) ? tr.querySelector(`td:nth-child(2) input`).value : '';
+        const daya = document.getElementById(`listrik-daya-${index}`) ? document.getElementById(`listrik-daya-${index}`).value : '';
+        const jam = document.getElementById(`listrik-jam-${index}`) ? document.getElementById(`listrik-jam-${index}`).value : '';
+        if (nama || daya || jam) {
+            listrikList.push({ nama, daya, jam });
+        }
+    });
+
     const hppData = {
         id: Date.now().toString(),
         namaResep,
@@ -236,7 +334,12 @@ const saveCurrentData = () => {
         persenLaba: document.getElementById('persen-laba').value,
         hargaJualManual: document.getElementById('harga-jual-manual').value,
         bahanList,
-        opList
+        opList,
+        gasJam,
+        gasHarga,
+        gasIsi,
+        listrikTarif,
+        listrikList
     };
 
     let saved = getSavedData();
@@ -303,6 +406,35 @@ const loadData = (id) => {
     } else {
         addOpRow();
     }
+
+    // restore gas info
+    if (data.gasJam !== undefined) {
+        document.getElementById('gas-jam').value = data.gasJam;
+    }
+    if (data.gasHarga !== undefined) {
+        document.getElementById('gas-harga').value = data.gasHarga;
+    }
+    if (data.gasIsi !== undefined) {
+        document.getElementById('gas-isi').value = data.gasIsi;
+    }
+    calculateGas();
+
+    // restore listrik info
+    if (data.listrikTarif !== undefined) {
+        document.getElementById('listrik-tarif').value = data.listrikTarif;
+    }
+    if (data.listrikList && data.listrikList.length > 0) {
+        data.listrikList.forEach(item => {
+            addListrikRow();
+            const lastIndex = listrikCounter;
+            document.querySelector(`#listrik-row-${lastIndex} td:nth-child(2) input`).value = item.nama || '';
+            document.getElementById(`listrik-daya-${lastIndex}`).value = item.daya;
+            document.getElementById(`listrik-jam-${lastIndex}`).value = item.jam;
+        });
+    } else {
+        addListrikRow();
+    }
+    calculateListrikAll();
 
     document.title = `HPP - ${data.namaResep}`;
 
